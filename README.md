@@ -1,4 +1,4 @@
-# 🚀 AI Company Reputation Analyzer - Chrome Extension
+# 🚀 Eden_Rambootan - AI Company Reputation Analyzer
 
 A stunning, modern Chrome extension that provides AI-powered company reputation analysis with beautiful animations and comprehensive analytics.
 
@@ -46,7 +46,7 @@ A stunning, modern Chrome extension that provides AI-powered company reputation 
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd ai-company-reputation-analyzer
+   cd Eden_Rambootan
    ```
 
 2. **Install dependencies**
@@ -164,4 +164,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ---
 
-**Built with ❤️ for modern web development** 
+**Built with ❤️ for modern web development**
