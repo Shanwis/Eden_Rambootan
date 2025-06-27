@@ -1,0 +1,66 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    box-sizing: border-box;
+  }
+  
+  body {
+    @apply antialiased;
+    font-family: 'Raleway', sans-serif;
+    font-weight: 400;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-[#88bde1]/30 backdrop-blur-md border border-white/20 rounded-xl shadow-xl;
+  }
+  
+  .glass-input {
+    @apply bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg px-4 py-3 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-accent-lime focus:border-transparent transition-all duration-200;
+  }
+  
+  .glass-button {
+    @apply bg-accent-lime text-primary font-medium px-6 py-3 rounded-lg shadow-lg hover:bg-accent-orange hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-accent-lime focus:ring-offset-2 focus:ring-offset-transparent;
+  }
+  
+  .score-card {
+    @apply glass-card p-6 text-center;
+  }
+  
+  .chart-container {
+    @apply glass-card p-6;
+  }
+  
+  .suggestion-card {
+    @apply glass-card p-4 hover:bg-white/15 transition-all duration-200 cursor-pointer;
+  }
+}
+
+@font-face {
+  font-family: 'Freigeist';
+  src: url('./assets/fonts/freigeist-wideregular.otf') format('opentype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Raleway';
+  src: url('./assets/fonts/Raleway-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Raleway';
+  src: url('./assets/fonts/Raleway-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+h1, h2, h3, h4, h5, h6, .font-bold, .font-semibold, .heading-font {
+  font-family: 'Freigeist', 'Raleway', sans-serif;
+} 
