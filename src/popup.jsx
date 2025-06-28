@@ -34,16 +34,39 @@ const Popup = () => {
 
     setIsAnalyzing(true);
     
-    // Simulate API call
+    // Store company data for dashboard
+    localStorage.setItem('company', formData.companyName);
+    localStorage.setItem('location', formData.location);
+    localStorage.setItem('type', formData.companyType);
+    
+    // Try to get real Reddit data for score calculation
+    try {
+      const response = await fetch(`http://localhost:5050/api/reddit?company=${encodeURIComponent(formData.companyName)}&type=${encodeURIComponent(formData.companyType)}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.sentiment_analysis && data.sentiment_analysis.total > 0) {
+          const { positive, total } = data.sentiment_analysis;
+          const calculatedScore = Math.round((positive / total) * 100);
+          setReputationScore(calculatedScore);
+        } else {
+          setReputationScore(Math.floor(Math.random() * 100));
+        }
+      } else {
+        setReputationScore(Math.floor(Math.random() * 100));
+      }
+    } catch (error) {
+      console.log('Reddit API not available, using mock score');
+      setReputationScore(Math.floor(Math.random() * 100));
+    }
+    
     setTimeout(() => {
-      const mockScore = Math.floor(Math.random() * 100);
-      setReputationScore(mockScore);
       setIsAnalyzing(false);
       setShowScore(true);
       
       // Navigate to dashboard after showing score
       setTimeout(() => {
-        chrome.tabs.create({ url: chrome.runtime.getURL('dashboard.html') });
+        const dashboardUrl = chrome.runtime.getURL(`dashboard.html?company=${encodeURIComponent(formData.companyName)}&location=${encodeURIComponent(formData.location)}&type=${encodeURIComponent(formData.companyType)}`);
+        chrome.tabs.create({ url: dashboardUrl });
       }, 2000);
     }, 2000);
   };
@@ -179,7 +202,7 @@ const Popup = () => {
                 {isAnalyzing ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Analyzing...
+                    Analyzing Reddit, News, Mastodon...
                   </>
                 ) : (
                   <>
@@ -219,7 +242,7 @@ const Popup = () => {
               transition={{ delay: 0.5 }}
               className="text-white/80 text-center text-sm"
             >
-              Opening detailed dashboard...
+              Opening detailed dashboard with AI insights...
             </motion.p>
           </motion.div>
         )}
@@ -229,4 +252,4 @@ const Popup = () => {
 };
 
 const root = ReactDOM.createRoot(document.getElementById('popup-root'));
-root.render(<Popup />); 
+root.render(<Popup />);
