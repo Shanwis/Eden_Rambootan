@@ -13,7 +13,7 @@ CORS(app)
 # To update your API key, either:
 # 1. Set environment variable: GEMINI_API_KEY=your_new_key_here
 # 2. Or replace the default value below with your new API key
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAwpKvs7vZAswo4-fw0e5BGsFaEDeHRhBM")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyAOiQq2V9BggSQrKceevcoboHeSX7BZIAg")
 
 try:
     genai.configure(api_key=GEMINI_API_KEY)
