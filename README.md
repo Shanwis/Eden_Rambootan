@@ -1,229 +1,236 @@
-# 🚀 Eden_Rambootan - AI Company Reputation Analyzer
+# 🚀 AI Company Reputation Analyzer - Comprehensive Edition
 
-A stunning, modern Chrome extension that provides AI-powered company reputation analysis with beautiful animations and comprehensive analytics from multiple data sources.
+A powerful Chrome extension that provides AI-powered company reputation analysis with comprehensive sentiment analysis across multiple data sources including Reddit, News, Google Reviews, and Mastodon.
 
 ## ✨ Features
 
-### 🎯 Popup Interface
-- **Clean, animated search form** with glassmorphism design
-- **Company name, location, and type inputs** with elegant styling
-- **Real-time reputation score** with emoji indicators
-- **Smooth transitions** and micro-interactions
-
-### 📊 Dashboard Analytics
-- **Comprehensive reputation metrics** with trend indicators
-- **Interactive charts** (sentiment trends, source breakdown)
-- **AI-powered suggestions** for reputation improvement
-- **Export functionality** (PDF, CSV, Copy Summary)
-- **Responsive design** with premium UI/UX
-- **Real-time data integration** from multiple sources
-
-### 🔍 Data Sources
+### 🎯 Multi-Platform Data Analysis
 - **Reddit Analysis** - AI-powered sentiment analysis with Gemini API
 - **News Articles** - Real-time news mentions via NewsAPI
-- **Mastodon Posts** - Social media sentiment from Mastodon instances
 - **Google Reviews** - Business reviews via SerpAPI
+- **Mastodon Posts** - Social media sentiment from Mastodon instances
+- **Unified Analysis** - Combined insights from all sources
+
+### 📊 Advanced Analytics
+- **Comprehensive reputation scoring** with weighted calculations
+- **Interactive sentiment trend charts** showing temporal patterns
+- **Source distribution analysis** with visual breakdowns
+- **AI-powered insights** for each data source
+- **Unified recommendations** based on cross-platform analysis
+
+### 🤖 AI-Powered Features
+- **Google Gemini AI** integration for advanced sentiment analysis
+- **NLTK VADER** sentiment scoring for accurate emotion detection
+- **Cross-platform insight generation** with actionable recommendations
+- **Automated issue identification** from negative feedback
+- **Strategic reputation management suggestions**
+
+### 🎨 Premium UI/UX
+- **Glassmorphism design** with modern aesthetics
+- **Responsive dashboard** with interactive charts
+- **Real-time data status indicators** showing API availability
+- **Export functionality** (PDF, CSV, Copy Summary)
+- **Smooth animations** and micro-interactions
 
 ## 🛠 Tech Stack
 
 ### Frontend
-- **React 18** - Modern component-based architecture
-- **Tailwind CSS** - Utility-first styling with custom components
-- **Framer Motion** - Smooth animations and transitions
-- **Recharts** - Beautiful, responsive charts
+- **React 18** - Modern component architecture
+- **Tailwind CSS** - Utility-first styling
+- **Framer Motion** - Smooth animations
+- **Recharts** - Interactive data visualization
 - **Lucide React** - Modern icon library
-- **Webpack** - Build tool and bundler
 
 ### Backend APIs
-- **Flask** - Python web framework for API endpoints
-- **Reddit API (PRAW)** - Reddit data scraping and analysis
-- **Google Gemini AI** - Advanced sentiment analysis and insights
-- **NewsAPI** - Real-time news article fetching
+- **Flask** - Python web framework
+- **Reddit API (PRAW)** - Reddit data scraping
+- **Google Gemini AI** - Advanced sentiment analysis
+- **NewsAPI** - Real-time news articles
 - **SerpAPI** - Google Reviews and business data
 - **NLTK VADER** - Sentiment analysis toolkit
 
-## 🎨 Design Features
+### Data Processing
+- **Unified Analysis Engine** - Combines all data sources
+- **Weighted Reputation Scoring** - Intelligent score calculation
+- **Cross-platform Sentiment Analysis** - Comprehensive emotion detection
+- **AI Insight Generation** - Actionable business recommendations
 
-- **Glassmorphism effects** with backdrop blur
-- **Gradient backgrounds** and soft shadows
-- **Premium color palette** with primary blue theme
-- **Responsive grid layouts** and modern typography
-- **Smooth animations** and hover effects
-- **Professional data visualization**
-
-## 📦 Installation
+## 📦 Installation & Setup
 
 ### Prerequisites
 - Node.js (v16 or higher)
 - Python 3.8+
-- npm or yarn
+- Chrome browser
 
-### Setup Instructions
-
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd Eden_Rambootan
-   ```
-
-2. **Install Node.js dependencies**
-   ```bash
-   npm install
-   ```
-
-3. **Install Python dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set up API Keys**
-   Create a `.env` file in the root directory:
-   ```env
-   GEMINI_API_KEY=your_gemini_api_key_here
-   NEWS_API_KEY=your_newsapi_key_here
-   SERPAPI_KEY=your_serpapi_key_here
-   ```
-
-5. **Build the extension**
-   ```bash
-   npm run build
-   ```
-
-6. **Start the backend servers**
-   ```bash
-   # Terminal 1 - Reddit Analysis Server
-   python reddit_scraper.py
-
-   # Terminal 2 - News API Server
-   python app.py
-
-   # Terminal 3 - Mastodon Server
-   python mastodon_scraper.py
-
-   # Terminal 4 - Reviews Server
-   python get_place_id_and_reviews.py
-   ```
-
-7. **Load in Chrome**
-   - Open Chrome and go to `chrome://extensions/`
-   - Enable "Developer mode" (top right toggle)
-   - Click "Load unpacked"
-   - Select the `dist` folder from this project
-
-## 🚀 Development
-
-### Development Mode
+### 1. Clone Repository
 ```bash
-npm run dev
+git clone <repository-url>
+cd ai-company-reputation-analyzer
 ```
-This will watch for changes and rebuild automatically.
 
-### Production Build
+### 2. Install Dependencies
+```bash
+# Install Node.js dependencies
+npm install
+
+# Install Python dependencies
+pip install -r requirements.txt
+```
+
+### 3. Configure API Keys
+Create a `.env` file in the root directory:
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+NEWS_API_KEY=your_newsapi_key_here
+SERPAPI_KEY=your_serpapi_key_here
+```
+
+### 4. Build Extension
 ```bash
 npm run build
 ```
-Creates optimized files in the `dist` directory.
 
-### Start All Servers
+### 5. Start Backend Servers
 ```bash
+# Start all servers (recommended)
 npm run start-servers
-```
-Installs Python dependencies and starts all backend servers.
 
-## 📁 Project Structure
-
-```
-├── src/
-│   ├── popup.jsx          # Popup interface component
-│   ├── dashboard.jsx      # Main dashboard component
-│   ├── background.js      # Service worker
-│   └── index.css          # Global styles and Tailwind
-├── reddit_scraper.py      # Reddit API and AI analysis
-├── app.py                 # News API server
-├── mastodon_scraper.py    # Mastodon data scraping
-├── get_place_id_and_reviews.py # Google Reviews API
-├── popup.html             # Popup HTML template
-├── dashboard.html         # Dashboard HTML template
-├── manifest.json          # Chrome extension manifest
-├── webpack.config.js      # Build configuration
-├── tailwind.config.js     # Tailwind CSS configuration
-├── requirements.txt       # Python dependencies
-└── package.json           # Node.js dependencies and scripts
+# Or start individually:
+python reddit_scraper.py      # Port 5050
+python news_scraper.py        # Port 5001  
+python reviews_scraper.py     # Port 5003
+python mastodon_scraper.py    # Port 5002
+python unified_analyzer.py    # Port 5004
 ```
 
-## 🎯 Usage
+### 6. Load Extension in Chrome
+1. Open Chrome and go to `chrome://extensions/`
+2. Enable "Developer mode" (top right toggle)
+3. Click "Load unpacked"
+4. Select the `dist` folder from this project
 
-1. **Click the extension icon** in your Chrome toolbar
-2. **Enter company details**:
+## 🚀 Usage
+
+### Basic Analysis
+1. **Click the extension icon** in Chrome toolbar
+2. **Enter company information**:
    - Company name
    - Location (city, country)
    - Company type (Tech, Retail, Healthcare, etc.)
-3. **Click "Analyze Reputation"** to start the analysis
-4. **View the score** and wait for the dashboard to open
-5. **Explore comprehensive analytics** including:
-   - Reddit sentiment analysis with AI insights
-   - News article mentions
-   - Mastodon social media sentiment
-   - Google Reviews data
-   - AI-powered improvement suggestions
+3. **Click "Analyze Reputation"** to start comprehensive analysis
+4. **View initial score** and wait for detailed dashboard
 
-## 🤖 AI Features
+### Dashboard Features
+- **Overall Reputation Score** - Weighted calculation from all sources
+- **Sentiment Trends** - Time-based sentiment analysis charts
+- **Source Distribution** - Visual breakdown of data sources
+- **AI Insights** - Platform-specific and unified recommendations
+- **Data Status** - Real-time API availability indicators
+- **Export Options** - PDF reports, CSV data, summary copying
 
-### Reddit Analysis
-- **Sentiment Analysis** using NLTK VADER
-- **AI Insights** powered by Google Gemini
-- **Key Issue Extraction** from negative feedback
-- **Improvement Suggestions** based on sentiment patterns
+## 🤖 AI Analysis Features
 
-### Multi-Source Integration
-- **Real-time data** from 4+ sources
-- **Unified sentiment scoring**
-- **Cross-platform trend analysis**
-- **Comprehensive reporting**
+### Sentiment Analysis
+- **NLTK VADER** for baseline sentiment scoring
+- **Google Gemini AI** for contextual analysis and insights
+- **Cross-platform sentiment correlation**
+- **Temporal trend analysis**
 
-## 🔧 API Configuration
+### Reputation Scoring Algorithm
+```
+Overall Score = (Reddit × 30%) + (News × 25%) + (Reviews × 25%) + (Mastodon × 20%)
 
-### Required API Keys
+Where each source score = (Positive Mentions / Total Mentions) × 100
+```
 
-1. **Google Gemini AI** - For advanced sentiment analysis
-   - Get key from: https://makersuite.google.com/app/apikey
+### AI Insight Generation
+- **Platform-specific analysis** for targeted improvements
+- **Cross-platform pattern recognition**
+- **Actionable business recommendations**
+- **Priority-based issue identification**
+
+## 📊 Data Sources & APIs
+
+### Reddit Analysis (Port 5050)
+- **PRAW** for Reddit API access
+- **Multiple search strategies** for comprehensive coverage
+- **Sentiment analysis** with NLTK VADER
+- **AI insights** with Gemini API
+
+### News Analysis (Port 5001)
+- **NewsAPI.org** for real-time news articles
+- **Multiple search queries** for better coverage
+- **Sentiment analysis** of headlines and descriptions
+- **Media perception insights**
+
+### Reviews Analysis (Port 5003)
+- **SerpAPI** for Google Reviews access
+- **Business location matching**
+- **Combined rating and text sentiment analysis**
+- **Customer satisfaction insights**
+
+### Mastodon Analysis (Port 5002)
+- **Multiple Mastodon instances** for broader coverage
+- **Hashtag and timeline searching**
+- **Social media sentiment tracking**
+- **Community engagement analysis**
+
+### Unified Analysis (Port 5004)
+- **Cross-platform data aggregation**
+- **Weighted reputation scoring**
+- **Comprehensive AI insights**
+- **Strategic recommendations**
+
+## 🔧 Configuration
+
+### API Keys Required
+1. **Google Gemini AI** - Advanced sentiment analysis
+   - Get from: https://makersuite.google.com/app/apikey
    
-2. **NewsAPI** - For news article mentions
-   - Get key from: https://newsapi.org/
+2. **NewsAPI** - News article mentions
+   - Get from: https://newsapi.org/
    
-3. **SerpAPI** - For Google Reviews
-   - Get key from: https://serpapi.com/
+3. **SerpAPI** - Google Reviews access
+   - Get from: https://serpapi.com/
 
-4. **Reddit API** - Already configured with demo credentials
-   - For production, get your own from: https://www.reddit.com/prefs/apps
+### Fallback Systems
+- **Intelligent fallbacks** when APIs are unavailable
+- **Mock data generation** for testing and demos
+- **Graceful degradation** with partial data
+- **Status indicators** for API availability
 
-## 📊 Data Sources
+## 📈 Performance & Scalability
 
-The extension integrates with multiple data sources:
+### Optimization Features
+- **Concurrent API calls** for faster data gathering
+- **Intelligent caching** to reduce API usage
+- **Rate limiting** to respect API constraints
+- **Error handling** with automatic retries
 
-- **Reddit**: Real-time posts and comments with AI sentiment analysis
-- **News Articles**: Latest news mentions via NewsAPI
-- **Mastodon**: Decentralized social media sentiment
-- **Google Reviews**: Business reviews and ratings
+### Scalability Considerations
+- **Modular architecture** for easy extension
+- **Separate servers** for each data source
+- **Unified analysis engine** for cross-platform insights
+- **Configurable weights** for reputation scoring
 
 ## 🔮 Future Enhancements
 
-- [ ] Twitter/X API integration
-- [ ] LinkedIn company page analysis
-- [ ] Historical data comparison
-- [ ] Custom alert notifications
-- [ ] Advanced filtering options
-- [ ] Dark/light theme toggle
-- [ ] Real-time data updates
-- [ ] Competitor comparison
+- [ ] **Twitter/X API** integration
+- [ ] **LinkedIn company analysis**
+- [ ] **Historical data tracking**
+- [ ] **Competitor comparison**
+- [ ] **Real-time alerts** for reputation changes
+- [ ] **Advanced ML models** for sentiment analysis
+- [ ] **Custom scoring algorithms**
+- [ ] **White-label solutions**
 
 ## 🤝 Contributing
 
 1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Test thoroughly
-5. Submit a pull request
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
 
 ## 📄 License
 
@@ -233,11 +240,11 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 - **Google Gemini AI** for advanced sentiment analysis
 - **Reddit API (PRAW)** for social media data
-- **Framer Motion** for smooth animations
-- **Recharts** for beautiful data visualization
-- **Tailwind CSS** for utility-first styling
-- **Lucide** for modern icons
+- **NewsAPI** for real-time news coverage
+- **SerpAPI** for Google Reviews access
+- **NLTK** for natural language processing
+- **React & Tailwind** for modern UI development
 
 ---
 
-**Built with ❤️ for modern web development and AI-powered insights**
+**Built with ❤️ for comprehensive AI-powered reputation analysis**

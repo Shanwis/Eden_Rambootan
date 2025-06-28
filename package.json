@@ -7,7 +7,7 @@
     "build": "webpack --mode production",
     "dev": "webpack --mode development --watch",
     "start": "webpack serve --mode development",
-    "start-servers": "python -m pip install -r requirements.txt && python reddit_scraper.py & python app.py & python mastodon_scraper.py & python get_place_id_and_reviews.py"
+    "start-servers": "python -m pip install -r requirements.txt && python reddit_scraper.py & python news_scraper.py & python mastodon_scraper.py & python reviews_scraper.py & python unified_analyzer.py"
   },
   "dependencies": {
     "@headlessui/react": "^2.2.4",

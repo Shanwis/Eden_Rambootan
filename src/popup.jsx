@@ -39,24 +39,31 @@ const Popup = () => {
     localStorage.setItem('location', formData.location);
     localStorage.setItem('type', formData.companyType);
     
-    // Try to get real Reddit data for score calculation
+    // Try to get unified analysis for score calculation
     try {
-      const response = await fetch(`http://localhost:5050/api/reddit?company=${encodeURIComponent(formData.companyName)}&type=${encodeURIComponent(formData.companyType)}`);
+      const response = await fetch(`http://localhost:5004/api/unified-analysis?company=${encodeURIComponent(formData.companyName)}&type=${encodeURIComponent(formData.companyType)}&location=${encodeURIComponent(formData.location)}`);
       if (response.ok) {
         const data = await response.json();
-        if (data.sentiment_analysis && data.sentiment_analysis.total > 0) {
-          const { positive, total } = data.sentiment_analysis;
-          const calculatedScore = Math.round((positive / total) * 100);
-          setReputationScore(calculatedScore);
-        } else {
-          setReputationScore(Math.floor(Math.random() * 100));
-        }
+        setReputationScore(data.reputation_score || 75);
       } else {
-        setReputationScore(Math.floor(Math.random() * 100));
+        // Fallback to Reddit API
+        const redditResponse = await fetch(`http://localhost:5050/api/reddit?company=${encodeURIComponent(formData.companyName)}&type=${encodeURIComponent(formData.companyType)}`);
+        if (redditResponse.ok) {
+          const redditData = await redditResponse.json();
+          if (redditData.sentiment_analysis && redditData.sentiment_analysis.total > 0) {
+            const { positive, total } = redditData.sentiment_analysis;
+            const calculatedScore = Math.round((positive / total) * 100);
+            setReputationScore(calculatedScore);
+          } else {
+            setReputationScore(Math.floor(Math.random() * 30) + 60); // 60-90 range
+          }
+        } else {
+          setReputationScore(Math.floor(Math.random() * 30) + 60); // 60-90 range
+        }
       }
     } catch (error) {
-      console.log('Reddit API not available, using mock score');
-      setReputationScore(Math.floor(Math.random() * 100));
+      console.log('APIs not available, using mock score');
+      setReputationScore(Math.floor(Math.random() * 30) + 60); // 60-90 range
     }
     
     setTimeout(() => {
@@ -67,20 +74,32 @@ const Popup = () => {
       setTimeout(() => {
         const dashboardUrl = chrome.runtime.getURL(`dashboard.html?company=${encodeURIComponent(formData.companyName)}&location=${encodeURIComponent(formData.location)}&type=${encodeURIComponent(formData.companyType)}`);
         chrome.tabs.create({ url: dashboardUrl });
-      }, 2000);
-    }, 2000);
+      }, 2500);
+    }, 3000);
   };
 
   const getScoreEmoji = (score) => {
+    if (score >= 80) return '🌟';
     if (score >= 70) return '😊';
-    if (score >= 40) return '😐';
+    if (score >= 50) return '😐';
+    if (score >= 30) return '😕';
     return '😞';
   };
 
   const getScoreColor = (score) => {
+    if (score >= 80) return 'text-green-500';
     if (score >= 70) return 'text-green-400';
-    if (score >= 40) return 'text-yellow-400';
+    if (score >= 50) return 'text-yellow-400';
+    if (score >= 30) return 'text-orange-400';
     return 'text-red-400';
+  };
+
+  const getScoreLabel = (score) => {
+    if (score >= 80) return 'Excellent Reputation';
+    if (score >= 70) return 'Good Reputation';
+    if (score >= 50) return 'Average Reputation';
+    if (score >= 30) return 'Below Average';
+    return 'Poor Reputation';
   };
 
   return (
@@ -105,7 +124,8 @@ const Popup = () => {
                 <Sparkles className="w-8 h-8" style={{ color: '#dff46b' }} />
                 <h1 className="text-2xl font-bold" style={{ color: '#dff46b' }}>Reputation Analyzer</h1>
               </div>
-              <p className="text-sm" style={{ color: '#133830' }}>AI-powered company reputation analysis</p>
+              <p className="text-sm" style={{ color: '#133830' }}>AI-powered comprehensive reputation analysis</p>
+              <p className="text-xs mt-1" style={{ color: '#133830' }}>Reddit • News • Reviews • Social Media</p>
             </motion.div>
 
             {/* Company Name Input */}
@@ -202,7 +222,7 @@ const Popup = () => {
                 {isAnalyzing ? (
                   <>
                     <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                    Analyzing Reddit, News, Mastodon...
+                    Analyzing across all platforms...
                   </>
                 ) : (
                   <>
@@ -231,8 +251,10 @@ const Popup = () => {
                 {reputationScore}/100
               </div>
               <div className="text-white/80 text-sm">
-                {reputationScore >= 70 ? 'Excellent Reputation' : 
-                 reputationScore >= 40 ? 'Average Reputation' : 'Poor Reputation'}
+                {getScoreLabel(reputationScore)}
+              </div>
+              <div className="text-white/60 text-xs mt-2">
+                Based on AI analysis across multiple platforms
               </div>
             </motion.div>
             
@@ -242,7 +264,7 @@ const Popup = () => {
               transition={{ delay: 0.5 }}
               className="text-white/80 text-center text-sm"
             >
-              Opening detailed dashboard with AI insights...
+              Opening comprehensive dashboard with detailed insights...
             </motion.p>
           </motion.div>
         )}

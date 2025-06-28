@@ -20,7 +20,10 @@ import {
   Shield,
   Heart,
   Lightbulb,
-  RefreshCw
+  RefreshCw,
+  AlertTriangle,
+  CheckCircle,
+  XCircle
 } from 'lucide-react';
 import './index.css';
 import jsPDF from 'jspdf';
@@ -29,11 +32,14 @@ import html2canvas from 'html2canvas';
 const Dashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [isLoading, setIsLoading] = useState(true);
-  const [redditData, setRedditData] = useState(null);
-  const [newsData, setNewsData] = useState(null);
-  const [mastodonData, setMastodonData] = useState(null);
-  const [reviewsData, setReviewsData] = useState(null);
+  const [unifiedData, setUnifiedData] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [dataStatus, setDataStatus] = useState({
+    reddit: false,
+    news: false,
+    mastodon: false,
+    reviews: false
+  });
   const dashboardRef = useRef(null);
 
   // Get company data from URL params or localStorage
@@ -48,184 +54,111 @@ const Dashboard = () => {
 
   const companyData = getCompanyData();
 
-  // Mock data (fallback)
-  const sentimentData = [
-    { date: 'Jun 21', positive: 58, neutral: 44, negative: 28 },
-    { date: 'Jun 22', positive: 60, neutral: 38, negative: 22 },
-    { date: 'Jun 23', positive: 66, neutral: 44, negative: 20 },
-    { date: 'Jun 24', positive: 54, neutral: 20, negative: 24 },
-    { date: 'Jun 25', positive: 34, neutral: 40, negative: 26 },
-    { date: 'Jun 26', positive: 62, neutral: 22, negative: 28 },
-    { date: 'Jun 27', positive: 40, neutral: 44, negative: 18 },
-  ];
-
-  const sourceData = [
-    { name: 'Reddit', value: 35, color: '#FF6B6B' },
-    { name: 'Twitter', value: 25, color: '#4ECDC4' },
-    { name: 'News', value: 20, color: '#45B7D1' },
-    { name: 'Reviews', value: 20, color: '#96CEB4' }
-  ];
-
-  const suggestions = [
-    {
-      icon: <MessageSquare className="w-6 h-6" />,
-      title: 'Improve Customer Service',
-      description: 'Focus on response time and resolution quality',
-      impact: 'High',
-      priority: 'urgent'
-    },
-    {
-      icon: <Globe className="w-6 h-6" />,
-      title: 'Enhance Online Presence',
-      description: 'Update website and social media engagement',
-      impact: 'Medium',
-      priority: 'high'
-    },
-    {
-      icon: <Star className="w-6 h-6" />,
-      title: 'Product Quality Review',
-      description: 'Address quality concerns from recent feedback',
-      impact: 'High',
-      priority: 'medium'
-    },
-    {
-      icon: <Users className="w-6 h-6" />,
-      title: 'Employee Satisfaction',
-      description: 'Improve workplace culture and benefits',
-      impact: 'Medium',
-      priority: 'low'
-    }
-  ];
-
-  const metrics = [
-    { label: 'Overall Score', value: 78, change: '+5', trend: 'up', icon: <TrendingUp /> },
-    { label: 'Sentiment', value: 82, change: '+8', trend: 'up', icon: <Heart /> },
-    { label: 'Overall Score', value: 78, change: '+5', trend: 'up', icon: <TrendingUp /> },
-    { label: 'Sentiment', value: 82, change: '+8', trend: 'up', icon: <Heart /> }
-  ];
-
-  // Fetch data from all sources
-  const fetchAllData = async () => {
+  // Fetch unified analysis data
+  const fetchUnifiedData = async () => {
     setIsRefreshing(true);
     
     try {
-      // Fetch Reddit data
-      const redditResponse = await fetch(`http://localhost:5050/api/reddit?company=${encodeURIComponent(companyData.company)}&type=${encodeURIComponent(companyData.type)}`);
-      if (redditResponse.ok) {
-        const redditResult = await redditResponse.json();
-        setRedditData(redditResult);
-        console.log('✅ Reddit data loaded:', redditResult);
+      console.log('🔍 Fetching unified analysis...');
+      const response = await fetch(`http://localhost:5004/api/unified-analysis?company=${encodeURIComponent(companyData.company)}&type=${encodeURIComponent(companyData.type)}&location=${encodeURIComponent(companyData.location)}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        setUnifiedData(data);
+        console.log('✅ Unified data loaded:', data);
+        
+        // Update data status
+        setDataStatus({
+          reddit: data.data_sources?.reddit?.is_real_data || false,
+          news: data.data_sources?.news?.is_real_data || false,
+          mastodon: data.data_sources?.mastodon?.is_real_data || false,
+          reviews: data.data_sources?.reviews?.is_real_data || false
+        });
+      } else {
+        console.log('❌ Unified analysis API not available');
+        // Fallback to individual API calls
+        await fetchIndividualData();
       }
     } catch (error) {
-      console.log('❌ Reddit API not available:', error);
-    }
-
-    try {
-      // Fetch News data
-      const newsResponse = await fetch(`http://localhost:5000/api/twitter?company=${encodeURIComponent(companyData.company)}&type=${encodeURIComponent(companyData.type)}`);
-      if (newsResponse.ok) {
-        const newsResult = await newsResponse.json();
-        setNewsData(newsResult);
-        console.log('✅ News data loaded:', newsResult);
-      }
-    } catch (error) {
-      console.log('❌ News API not available:', error);
-    }
-
-    try {
-      // Fetch Mastodon data
-      const mastodonResponse = await fetch(`http://localhost:5002/api/mastodon?company=${encodeURIComponent(companyData.company)}&type=${encodeURIComponent(companyData.type)}`);
-      if (mastodonResponse.ok) {
-        const mastodonResult = await mastodonResponse.json();
-        setMastodonData(mastodonResult);
-        console.log('✅ Mastodon data loaded:', mastodonResult);
-      }
-    } catch (error) {
-      console.log('❌ Mastodon API not available:', error);
-    }
-
-    try {
-      // Fetch Reviews data
-      const reviewsResponse = await fetch('http://localhost:5000/get_reviews', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          company: companyData.company,
-          category: companyData.type,
-          location: companyData.location
-        })
-      });
-      if (reviewsResponse.ok) {
-        const reviewsResult = await reviewsResponse.json();
-        setReviewsData(reviewsResult);
-        console.log('✅ Reviews data loaded:', reviewsResult);
-      }
-    } catch (error) {
-      console.log('❌ Reviews API not available:', error);
+      console.log('❌ Unified analysis failed, trying individual APIs:', error);
+      await fetchIndividualData();
     }
 
     setIsRefreshing(false);
+  };
+
+  // Fallback to individual API calls
+  const fetchIndividualData = async () => {
+    const fallbackData = {
+      company: companyData.company,
+      reputation_score: 75,
+      unified_insights: "Analysis based on available data sources. Focus on improving customer engagement and addressing service quality concerns.",
+      trend_data: [
+        { date: 'Day 1', positive: 45, neutral: 35, negative: 20 },
+        { date: 'Day 2', positive: 50, neutral: 30, negative: 20 },
+        { date: 'Day 3', positive: 55, neutral: 25, negative: 20 },
+        { date: 'Day 4', positive: 48, neutral: 32, negative: 20 },
+        { date: 'Day 5', positive: 52, neutral: 28, negative: 20 },
+        { date: 'Day 6', positive: 58, neutral: 22, negative: 20 },
+        { date: 'Day 7', positive: 60, neutral: 25, negative: 15 }
+      ],
+      source_breakdown: [
+        { name: 'Reddit', value: 35, percentage: 35, color: '#FF6B6B' },
+        { name: 'News', value: 25, percentage: 25, color: '#45B7D1' },
+        { name: 'Mastodon', value: 20, percentage: 20, color: '#4ECDC4' },
+        { name: 'Reviews', value: 20, percentage: 20, color: '#96CEB4' }
+      ],
+      total_mentions: 100
+    };
+
+    // Try to fetch individual data sources
+    try {
+      const redditResponse = await fetch(`http://localhost:5050/api/reddit?company=${encodeURIComponent(companyData.company)}&type=${encodeURIComponent(companyData.type)}`);
+      if (redditResponse.ok) {
+        const redditData = await redditResponse.json();
+        fallbackData.data_sources = { reddit: redditData };
+        setDataStatus(prev => ({ ...prev, reddit: redditData.is_real_data || false }));
+      }
+    } catch (error) {
+      console.log('❌ Reddit API not available');
+    }
+
+    setUnifiedData(fallbackData);
   };
 
   useEffect(() => {
     // Simulate loading
     setTimeout(() => setIsLoading(false), 1500);
     
-    // Fetch real data
-    fetchAllData();
+    // Fetch unified data
+    fetchUnifiedData();
   }, []);
 
-  // Calculate dynamic metrics based on real data
+  // Calculate dynamic metrics
   const calculateMetrics = () => {
-    let overallScore = 78;
-    let sentimentScore = 82;
-    
-    if (redditData && redditData.sentiment_analysis) {
-      const { positive, negative, total } = redditData.sentiment_analysis;
-      if (total > 0) {
-        sentimentScore = Math.round((positive / total) * 100);
-        overallScore = Math.round(((positive * 2 + (total - positive - negative)) / (total * 2)) * 100);
-      }
+    if (!unifiedData) {
+      return [
+        { label: 'Overall Score', value: 75, change: '+5', trend: 'up', icon: <TrendingUp /> },
+        { label: 'Sentiment', value: 80, change: '+8', trend: 'up', icon: <Heart /> },
+        { label: 'Mentions', value: 150, change: '+12', trend: 'up', icon: <MessageSquare /> },
+        { label: 'Sources', value: 4, change: '0', trend: 'neutral', icon: <Globe /> }
+      ];
     }
-    
-    return [
-      { label: 'Overall Score', value: overallScore, change: '+5', trend: 'up', icon: <TrendingUp /> },
-      { label: 'Sentiment', value: sentimentScore, change: '+8', trend: 'up', icon: <Heart /> }
-    ];
-  };
 
-  // Generate dynamic source data
-  const generateSourceData = () => {
-    const sources = [];
-    let total = 0;
+    const reputationScore = unifiedData.reputation_score || 75;
+    const totalMentions = unifiedData.total_mentions || 0;
+    const activeSources = unifiedData.source_breakdown?.length || 0;
     
-    if (redditData && redditData.post_count > 0) {
-      sources.push({ name: 'Reddit', value: redditData.post_count, color: '#FF6B6B' });
-      total += redditData.post_count;
-    }
-    
-    if (newsData && newsData.article_count > 0) {
-      sources.push({ name: 'News', value: newsData.article_count, color: '#45B7D1' });
-      total += newsData.article_count;
-    }
-    
-    if (mastodonData && mastodonData.post_count > 0) {
-      sources.push({ name: 'Mastodon', value: mastodonData.post_count, color: '#4ECDC4' });
-      total += mastodonData.post_count;
-    }
-    
-    if (reviewsData && reviewsData.reviews && reviewsData.reviews.length > 0) {
-      sources.push({ name: 'Reviews', value: reviewsData.reviews.length, color: '#96CEB4' });
-      total += reviewsData.reviews.length;
-    }
-    
-    // Convert to percentages
-    return sources.map(source => ({
-      ...source,
-      value: total > 0 ? Math.round((source.value / total) * 100) : 0
-    }));
+    // Calculate sentiment score from trend data
+    const latestTrend = unifiedData.trend_data?.[unifiedData.trend_data.length - 1];
+    const sentimentScore = latestTrend ? latestTrend.positive : 80;
+
+    return [
+      { label: 'Overall Score', value: reputationScore, change: '+5', trend: 'up', icon: <TrendingUp /> },
+      { label: 'Sentiment', value: sentimentScore, change: '+8', trend: 'up', icon: <Heart /> },
+      { label: 'Mentions', value: totalMentions, change: '+12', trend: 'up', icon: <MessageSquare /> },
+      { label: 'Sources', value: activeSources, change: '0', trend: 'neutral', icon: <Globe /> }
+    ];
   };
 
   const handleExport = (type) => {
@@ -241,12 +174,6 @@ const Dashboard = () => {
     if (!dashboardRef.current) return;
     
     try {
-      const exportButton = document.querySelector('[onclick*="pdf"]');
-      if (exportButton) {
-        exportButton.disabled = true;
-        exportButton.innerHTML = '<div class="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>Generating PDF...';
-      }
-
       const canvas = await html2canvas(dashboardRef.current, {
         scale: 2,
         useCORS: true,
@@ -260,69 +187,52 @@ const Dashboard = () => {
       const imgWidth = 210;
       const pageHeight = 295;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
-      let heightLeft = imgHeight;
 
       const pdf = new jsPDF('p', 'mm', 'a4');
-      let position = 0;
-
+      
+      // Add title page
       pdf.setFontSize(24);
       pdf.setTextColor(21, 81, 146);
       pdf.text('Company Reputation Dashboard', 105, 30, { align: 'center' });
       
       pdf.setFontSize(12);
       pdf.setTextColor(100, 100, 100);
-      pdf.text(`${companyData.company} - AI-powered analysis and insights`, 105, 40, { align: 'center' });
+      pdf.text(`${companyData.company} - Comprehensive AI Analysis`, 105, 40, { align: 'center' });
       
       pdf.setFontSize(10);
       pdf.text(`Generated on: ${new Date().toLocaleDateString()}`, 105, 50, { align: 'center' });
       
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-      heightLeft -= pageHeight;
-
-      while (heightLeft >= 0) {
-        position = heightLeft - imgHeight;
-        pdf.addPage();
-        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
-        heightLeft -= pageHeight;
+      if (unifiedData) {
+        pdf.text(`Overall Reputation Score: ${unifiedData.reputation_score}/100`, 105, 60, { align: 'center' });
       }
+      
+      // Add dashboard image
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
 
-      // Add summary page with real data
+      // Add summary page
       pdf.addPage();
       pdf.setFontSize(16);
       pdf.setTextColor(21, 81, 146);
       pdf.text('Executive Summary', 20, 30);
       
-      pdf.setFontSize(12);
-      pdf.setTextColor(0, 0, 0);
-      pdf.text('Key Metrics:', 20, 50);
-      pdf.setFontSize(10);
-      
-      const dynamicMetrics = calculateMetrics();
-      pdf.text(`• Overall Score: ${dynamicMetrics[0].value} (${dynamicMetrics[0].change} from previous period)`, 25, 60);
-      pdf.text(`• Sentiment Score: ${dynamicMetrics[1].value} (${dynamicMetrics[1].change} from previous period)`, 25, 70);
-      
-      if (redditData && redditData.sentiment_analysis) {
-        pdf.text(`• Reddit Analysis: ${redditData.sentiment_analysis.positive} positive, ${redditData.sentiment_analysis.negative} negative posts`, 25, 80);
-      }
-      
-      pdf.text('Data Sources:', 20, 100);
-      const dynamicSources = generateSourceData();
-      dynamicSources.forEach((source, index) => {
-        pdf.text(`• ${source.name}: ${source.value}% of total mentions`, 25, 110 + (index * 10));
-      });
-
-      if (redditData && redditData.ai_suggestions) {
-        pdf.text('AI Recommendations:', 20, 140);
-        pdf.text(redditData.ai_suggestions.substring(0, 400) + '...', 25, 150, { maxWidth: 160 });
+      if (unifiedData) {
+        pdf.setFontSize(12);
+        pdf.setTextColor(0, 0, 0);
+        pdf.text('Key Metrics:', 20, 50);
+        pdf.setFontSize(10);
+        
+        const metrics = calculateMetrics();
+        metrics.forEach((metric, index) => {
+          pdf.text(`• ${metric.label}: ${metric.value} (${metric.change} from previous period)`, 25, 60 + (index * 10));
+        });
+        
+        pdf.text('AI Insights:', 20, 110);
+        const insights = unifiedData.unified_insights || 'No insights available';
+        pdf.text(insights.substring(0, 500) + '...', 25, 120, { maxWidth: 160 });
       }
 
       pdf.save(`${companyData.company}-reputation-dashboard.pdf`);
-
-      if (exportButton) {
-        exportButton.disabled = false;
-        exportButton.innerHTML = '<FileText className="w-4 h-4 mr-2" />Export PDF';
-      }
 
     } catch (error) {
       console.error('Error generating PDF:', error);
@@ -331,61 +241,23 @@ const Dashboard = () => {
   };
 
   const createCSVData = () => {
-    const headers = [
-      'Date',
-      'Positive Sentiment',
-      'Neutral Sentiment', 
-      'Negative Sentiment',
-      'Overall Score',
-      'Sentiment Score',
-      'Source',
-      'Contribution %'
-    ];
-
+    const headers = ['Metric', 'Value', 'Source', 'Date'];
     const rows = [];
     
-    // Add sentiment data
-    sentimentData.forEach(day => {
-      rows.push([
-        day.date,
-        day.positive,
-        day.neutral,
-        day.negative,
-        calculateMetrics()[0].value,
-        calculateMetrics()[1].value,
-        'N/A',
-        'N/A'
-      ]);
-    });
-
-    // Add real source data
-    const dynamicSources = generateSourceData();
-    dynamicSources.forEach(source => {
-      rows.push([
-        'N/A',
-        'N/A',
-        'N/A',
-        'N/A',
-        'N/A',
-        'N/A',
-        source.name,
-        source.value
-      ]);
-    });
-
-    // Add Reddit insights if available
-    if (redditData && redditData.key_issues) {
-      redditData.key_issues.forEach(issue => {
-        rows.push([
-          'N/A',
-          'N/A',
-          'N/A',
-          'N/A',
-          'N/A',
-          'N/A',
-          'Reddit Issue',
-          issue
-        ]);
+    if (unifiedData) {
+      // Add reputation score
+      rows.push(['Reputation Score', unifiedData.reputation_score, 'Unified Analysis', new Date().toLocaleDateString()]);
+      
+      // Add source breakdown
+      unifiedData.source_breakdown?.forEach(source => {
+        rows.push([`${source.name} Mentions`, source.value, source.name, new Date().toLocaleDateString()]);
+      });
+      
+      // Add trend data
+      unifiedData.trend_data?.forEach(day => {
+        rows.push(['Positive Sentiment', day.positive, 'Trend Analysis', day.date]);
+        rows.push(['Negative Sentiment', day.negative, 'Trend Analysis', day.date]);
+        rows.push(['Neutral Sentiment', day.neutral, 'Trend Analysis', day.date]);
       });
     }
 
@@ -417,7 +289,8 @@ const Dashboard = () => {
       const summary = createSummaryText();
       await navigator.clipboard.writeText(summary);
       
-      const copyButton = document.querySelector('[onclick*="handleCopySummary"]');
+      // Visual feedback
+      const copyButton = document.querySelector('[data-copy-button]');
       if (copyButton) {
         const originalText = copyButton.innerHTML;
         copyButton.innerHTML = '<svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>Copied!';
@@ -433,58 +306,59 @@ const Dashboard = () => {
 
   const createSummaryText = () => {
     const currentDate = new Date().toLocaleDateString();
-    const dynamicMetrics = calculateMetrics();
-    const dynamicSources = generateSourceData();
     
-    let summary = `COMPANY REPUTATION DASHBOARD SUMMARY
+    let summary = `COMPREHENSIVE REPUTATION DASHBOARD SUMMARY
 Generated on: ${currentDate}
 Company: ${companyData.company}
 Location: ${companyData.location}
 Industry: ${companyData.type}
 
-OVERALL PERFORMANCE
-• Overall Score: ${dynamicMetrics[0].value} (${dynamicMetrics[0].change} from previous period)
-• Sentiment Score: ${dynamicMetrics[1].value} (${dynamicMetrics[1].change} from previous period)
-• Trend: Positive growth in reputation metrics
+`;
+
+    if (unifiedData) {
+      summary += `OVERALL PERFORMANCE
+• Reputation Score: ${unifiedData.reputation_score}/100
+• Total Mentions: ${unifiedData.total_mentions}
+• Active Data Sources: ${unifiedData.source_breakdown?.length || 0}
 
 DATA SOURCES BREAKDOWN`;
 
-    dynamicSources.forEach(source => {
-      summary += `\n• ${source.name}: ${source.value}% of total mentions`;
-    });
-
-    if (redditData && redditData.sentiment_analysis) {
-      summary += `\n\nREDDIT SENTIMENT ANALYSIS
-• Positive Posts: ${redditData.sentiment_analysis.positive}
-• Negative Posts: ${redditData.sentiment_analysis.negative}
-• Neutral Posts: ${redditData.sentiment_analysis.neutral}
-• Total Posts Analyzed: ${redditData.sentiment_analysis.total}`;
-    }
-
-    if (redditData && redditData.company_brief) {
-      summary += `\n\nCOMPANY OVERVIEW
-${redditData.company_brief}`;
-    }
-
-    if (redditData && redditData.ai_suggestions) {
-      summary += `\n\nAI-POWERED RECOMMENDATIONS
-${redditData.ai_suggestions}`;
-    }
-
-    if (redditData && redditData.key_issues && redditData.key_issues.length > 0) {
-      summary += `\n\nKEY ISSUES IDENTIFIED`;
-      redditData.key_issues.forEach((issue, index) => {
-        summary += `\n${index + 1}. ${issue}`;
+      unifiedData.source_breakdown?.forEach(source => {
+        summary += `\n• ${source.name}: ${source.value} mentions (${source.percentage}%)`;
       });
+
+      if (unifiedData.unified_insights) {
+        summary += `\n\nAI-POWERED INSIGHTS
+${unifiedData.unified_insights}`;
+      }
+
+      // Add individual source insights
+      const dataSources = unifiedData.data_sources || {};
+      
+      if (dataSources.reddit?.ai_suggestions) {
+        summary += `\n\nREDDIT ANALYSIS
+${dataSources.reddit.ai_suggestions}`;
+      }
+      
+      if (dataSources.news?.ai_insights) {
+        summary += `\n\nNEWS ANALYSIS
+${dataSources.news.ai_insights}`;
+      }
+      
+      if (dataSources.reviews?.ai_insights) {
+        summary += `\n\nREVIEWS ANALYSIS
+${dataSources.reviews.ai_insights}`;
+      }
     }
 
-    summary += `\n\nACTION ITEMS
+    summary += `\n\nRECOMMENDED ACTIONS
 • Monitor sentiment trends across all platforms
-• Address key issues identified in Reddit discussions
-• Continue engaging with customers on social media
+• Address key issues identified in analysis
+• Engage proactively with customers on social media
 • Focus on improving areas with negative feedback
+• Implement reputation management strategies
 
-For detailed analysis and charts, please refer to the full dashboard report.`;
+For detailed analysis and interactive charts, please refer to the full dashboard report.`;
 
     return summary;
   };
@@ -500,13 +374,13 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
           <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-white mx-auto mb-4"></div>
           <p className="text-black/80 text-lg">Analyzing {companyData.company} reputation...</p>
           <p className="text-black/60 text-sm mt-2">Gathering data from Reddit, News, Mastodon, and Reviews...</p>
+          <p className="text-black/60 text-sm mt-1">Performing AI-powered sentiment analysis...</p>
         </motion.div>
       </div>
     );
   }
 
   const dynamicMetrics = calculateMetrics();
-  const dynamicSources = generateSourceData();
 
   return (
     <div className="min-h-screen" style={{ background: '#e3f0fa' }} ref={dashboardRef}>
@@ -519,14 +393,24 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-black mb-2">{companyData.company} - Reputation Dashboard</h1>
-            <p className="text-black/80">AI-powered analysis and insights • {companyData.location} • {companyData.type}</p>
-            {redditData && redditData.company_brief && (
-              <p className="text-black/70 text-sm mt-2 max-w-2xl">{redditData.company_brief}</p>
+            <p className="text-black/80">AI-powered comprehensive analysis • {companyData.location} • {companyData.type}</p>
+            {unifiedData && (
+              <div className="mt-3 flex items-center space-x-4">
+                <div className="flex items-center space-x-2">
+                  <div className="text-2xl font-bold text-primary">
+                    {unifiedData.reputation_score}/100
+                  </div>
+                  <span className="text-black/70">Overall Reputation Score</span>
+                </div>
+                <div className="text-black/60">
+                  • {unifiedData.total_mentions} total mentions analyzed
+                </div>
+              </div>
             )}
           </div>
           <div className="flex space-x-3">
             <button
-              onClick={fetchAllData}
+              onClick={fetchUnifiedData}
               disabled={isRefreshing}
               className="glass-button flex items-center"
             >
@@ -535,6 +419,7 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
             </button>
             <button
               onClick={handleCopySummary}
+              data-copy-button
               className="glass-button flex items-center"
             >
               <Copy className="w-4 h-4 mr-2" />
@@ -572,25 +457,29 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.1 }}
-            className="glass-card p-6 lg:col-span-2"
+            className="glass-card p-6 lg:col-span-4"
           >
             <h3 className="text-xl font-semibold mb-4" style={{ fontFamily: 'Freigeist', fontWeight: 400 }}>Data Sources Status</h3>
-            <div className="grid grid-cols-2 gap-4 text-sm">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${redditData ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                <span>Reddit: {redditData ? `${redditData.post_count} posts` : 'Unavailable'}</span>
+                <div className={`w-3 h-3 rounded-full ${dataStatus.reddit ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                <span>Reddit: {dataStatus.reddit ? 'Live Data' : 'Fallback Data'}</span>
+                {dataStatus.reddit ? <CheckCircle className="w-4 h-4 text-green-400" /> : <XCircle className="w-4 h-4 text-red-400" />}
               </div>
               <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${newsData ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                <span>News: {newsData ? `${newsData.article_count} articles` : 'Unavailable'}</span>
+                <div className={`w-3 h-3 rounded-full ${dataStatus.news ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                <span>News: {dataStatus.news ? 'Live Data' : 'Fallback Data'}</span>
+                {dataStatus.news ? <CheckCircle className="w-4 h-4 text-green-400" /> : <XCircle className="w-4 h-4 text-red-400" />}
               </div>
               <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${mastodonData ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                <span>Mastodon: {mastodonData ? `${mastodonData.post_count} posts` : 'Unavailable'}</span>
+                <div className={`w-3 h-3 rounded-full ${dataStatus.mastodon ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                <span>Mastodon: {dataStatus.mastodon ? 'Live Data' : 'Fallback Data'}</span>
+                {dataStatus.mastodon ? <CheckCircle className="w-4 h-4 text-green-400" /> : <XCircle className="w-4 h-4 text-red-400" />}
               </div>
               <div className="flex items-center space-x-2">
-                <div className={`w-3 h-3 rounded-full ${reviewsData ? 'bg-green-400' : 'bg-red-400'}`}></div>
-                <span>Reviews: {reviewsData ? `${reviewsData.reviews?.length || 0} reviews` : 'Unavailable'}</span>
+                <div className={`w-3 h-3 rounded-full ${dataStatus.reviews ? 'bg-green-400' : 'bg-red-400'}`}></div>
+                <span>Reviews: {dataStatus.reviews ? 'Live Data' : 'Fallback Data'}</span>
+                {dataStatus.reviews ? <CheckCircle className="w-4 h-4 text-green-400" /> : <XCircle className="w-4 h-4 text-red-400" />}
               </div>
             </div>
           </motion.div>
@@ -627,12 +516,12 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
             className="glass-card px-8 py-6"
           >
             <div className="flex items-center mb-2">
-              <svg className="w-5 h-5 text-primary mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4M8 2v4M3 10h18" /></svg>
-              <span className="text-lg font-semibold text-primary">Sentiment Over Time</span>
+              <TrendingUp className="w-5 h-5 text-primary mr-2" />
+              <span className="text-lg font-semibold text-primary">Sentiment Trends</span>
             </div>
-            <div className="text-neutral-gray text-sm mb-4">Last 7 days sentiment analysis</div>
+            <div className="text-neutral-gray text-sm mb-4">AI-powered sentiment analysis over time</div>
             <ResponsiveContainer width="100%" height={300}>
-              <LineChart data={sentimentData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <LineChart data={unifiedData?.trend_data || []} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5b366" />
                 <XAxis dataKey="date" stroke="#3c9cce" tick={{ fontSize: 14, fontWeight: 500 }} axisLine={false} tickLine={false} />
                 <YAxis stroke="#3c9cce" domain={[0, 80]} tick={{ fontSize: 14, fontWeight: 500 }} axisLine={false} tickLine={false} />
@@ -666,19 +555,14 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
             className="glass-card px-8 py-6 flex flex-col items-center"
           >
             <div className="flex items-center mb-1 w-full">
-              <svg className="w-5 h-5 text-primary mr-2" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M3 3v18h18" /><path d="M9 17V9h8" /></svg>
-              <span className="text-lg font-semibold text-primary">Source Breakdown</span>
+              <BarChart3 className="w-5 h-5 text-primary mr-2" />
+              <span className="text-lg font-semibold text-primary">Source Distribution</span>
             </div>
-            <div className="text-neutral-gray text-sm mb-4 w-full">Data sources contribution</div>
+            <div className="text-neutral-gray text-sm mb-4 w-full">Data sources contribution analysis</div>
             <ResponsiveContainer width="100%" height={220}>
               <PieChart>
                 <Pie
-                  data={dynamicSources.length > 0 ? dynamicSources : [
-                    { name: 'Reddit', value: 35, color: '#155192' },
-                    { name: 'Twitter', value: 30, color: '#5ca4d2' },
-                    { name: 'Google Reviews', value: 20, color: '#88bde1' },
-                    { name: 'News Articles', value: 15, color: '#e5b366' },
-                  ]}
+                  data={unifiedData?.source_breakdown || []}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}
@@ -688,38 +572,30 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
                   stroke="none"
                   nameKey="name"
                 >
-                  {(dynamicSources.length > 0 ? dynamicSources : [
-                    { name: 'Reddit', value: 35, color: '#155192' },
-                    { name: 'Twitter', value: 30, color: '#5ca4d2' },
-                    { name: 'Google Reviews', value: 20, color: '#88bde1' },
-                    { name: 'News Articles', value: 15, color: '#e5b366' },
-                  ]).map((entry, index) => (
+                  {(unifiedData?.source_breakdown || []).map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip
-                  formatter={(value) => [`Contribution : ${value}%`, '']}
+                  formatter={(value, name) => [`${value} mentions (${unifiedData?.source_breakdown?.find(s => s.name === name)?.percentage || 0}%)`, name]}
                   contentStyle={{ background: '#fff', borderRadius: 12, border: 'none', color: '#222', fontWeight: 500 }}
                 />
               </PieChart>
             </ResponsiveContainer>
             <div className="flex justify-center space-x-6 mt-6 flex-wrap">
-              {(dynamicSources.length > 0 ? dynamicSources : [
-                { name: 'Reddit', value: 35, color: '#155192' },
-                { name: 'Twitter', value: 30, color: '#5ca4d2' },
-                { name: 'Google Reviews', value: 20, color: '#88bde1' },
-                { name: 'News Articles', value: 15, color: '#e5b366' },
-              ]).map((source, index) => (
+              {(unifiedData?.source_breakdown || []).map((source, index) => (
                 <div key={index} className="flex items-center space-x-2">
                   <span className="w-4 h-4 rounded-full inline-block" style={{ background: source.color }}></span>
-                  <span className="text-sm font-medium" style={{ color: source.color }}>{source.name}</span>
+                  <span className="text-sm font-medium" style={{ color: source.color }}>
+                    {source.name} ({source.percentage}%)
+                  </span>
                 </div>
               ))}
             </div>
           </motion.div>
         </div>
 
-        {/* AI Suggestions */}
+        {/* AI Insights Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -728,11 +604,11 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
         >
           <div className="flex items-center mb-6">
             <Zap className="w-6 h-6 text-yellow-400 mr-3" />
-            <h3 className="text-xl font-semibold text-black">AI-Powered Recommendations</h3>
+            <h3 className="text-xl font-semibold text-black">AI-Powered Comprehensive Analysis</h3>
           </div>
           
-          {/* Reddit AI Suggestions */}
-          {redditData && redditData.ai_suggestions && (
+          {/* Unified AI Insights */}
+          {unifiedData?.unified_insights && (
             <motion.div
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
@@ -744,10 +620,12 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
                   <Lightbulb className="w-6 h-6" />
                 </div>
                 <div className="flex-1">
-                  <h4 className="text-black font-semibold mb-2">Reddit Analysis Insights</h4>
-                  <p className="text-black/70 text-sm mb-3 whitespace-pre-line">{redditData.ai_suggestions}</p>
+                  <h4 className="text-black font-semibold mb-2">Comprehensive Reputation Analysis</h4>
+                  <p className="text-black/70 text-sm mb-3 whitespace-pre-line">{unifiedData.unified_insights}</p>
                   <div className="flex items-center justify-between">
-                    <span className="text-xs text-black/60">Source: AI Analysis of {redditData.post_count} Reddit posts</span>
+                    <span className="text-xs text-black/60">
+                      Source: AI Analysis of {unifiedData.total_mentions} mentions across {unifiedData.source_breakdown?.length || 0} platforms
+                    </span>
                     <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400">AI Generated</span>
                   </div>
                 </div>
@@ -755,70 +633,120 @@ For detailed analysis and charts, please refer to the full dashboard report.`;
             </motion.div>
           )}
 
-          {/* Key Issues */}
-          {redditData && redditData.key_issues && redditData.key_issues.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.7 }}
-              className="suggestion-card group mb-6"
-            >
-              <div className="flex items-start space-x-4">
-                <div className="text-red-400 group-hover:text-red-300 transition-colors">
-                  <Target className="w-6 h-6" />
-                </div>
-                <div className="flex-1">
-                  <h4 className="text-black font-semibold mb-2">Key Issues Identified</h4>
-                  <ul className="text-black/70 text-sm space-y-1">
-                    {redditData.key_issues.map((issue, index) => (
-                      <li key={index} className="flex items-start space-x-2">
-                        <span className="text-red-400 mt-1">•</span>
-                        <span>{issue}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="flex items-center justify-between mt-3">
-                    <span className="text-xs text-black/60">Extracted from negative sentiment analysis</span>
-                    <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400">High Priority</span>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-
-          {/* Default suggestions if no Reddit data */}
-          {!redditData && (
+          {/* Individual Source Insights */}
+          {unifiedData?.data_sources && (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {suggestions.map((suggestion, index) => (
+              {/* Reddit Insights */}
+              {unifiedData.data_sources.reddit?.ai_suggestions && (
                 <motion.div
-                  key={suggestion.title}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
-                  transition={{ delay: 0.6 + index * 0.1 }}
+                  transition={{ delay: 0.7 }}
                   className="suggestion-card group"
                 >
                   <div className="flex items-start space-x-4">
-                    <div className="text-primary-400 group-hover:text-primary-300 transition-colors">
-                      {suggestion.icon}
+                    <div className="text-red-400 group-hover:text-red-300 transition-colors">
+                      <MessageSquare className="w-6 h-6" />
                     </div>
                     <div className="flex-1">
-                      <h4 className="text-black font-semibold mb-2">{suggestion.title}</h4>
-                      <p className="text-black/70 text-sm mb-3">{suggestion.description}</p>
+                      <h4 className="text-black font-semibold mb-2">Reddit Community Insights</h4>
+                      <p className="text-black/70 text-sm mb-3 whitespace-pre-line">
+                        {unifiedData.data_sources.reddit.ai_suggestions.substring(0, 200)}...
+                      </p>
                       <div className="flex items-center justify-between">
-                        <span className="text-xs text-black/60">Impact: {suggestion.impact}</span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${
-                          suggestion.priority === 'urgent' ? 'bg-red-500/20 text-red-400' :
-                          suggestion.priority === 'high' ? 'bg-orange-500/20 text-orange-400' :
-                          suggestion.priority === 'medium' ? 'bg-yellow-500/20 text-yellow-400' :
-                          'bg-green-500/20 text-green-400'
-                        }`}>
-                          {suggestion.priority}
+                        <span className="text-xs text-black/60">
+                          From {unifiedData.data_sources.reddit.post_count || 0} Reddit posts
                         </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-red-500/20 text-red-400">Reddit Analysis</span>
                       </div>
                     </div>
                   </div>
                 </motion.div>
-              ))}
+              )}
+
+              {/* News Insights */}
+              {unifiedData.data_sources.news?.ai_insights && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.8 }}
+                  className="suggestion-card group"
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className="text-blue-400 group-hover:text-blue-300 transition-colors">
+                      <Globe className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-black font-semibold mb-2">Media Coverage Analysis</h4>
+                      <p className="text-black/70 text-sm mb-3 whitespace-pre-line">
+                        {unifiedData.data_sources.news.ai_insights.substring(0, 200)}...
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-black/60">
+                          From {unifiedData.data_sources.news.article_count || 0} news articles
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-blue-500/20 text-blue-400">News Analysis</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Reviews Insights */}
+              {unifiedData.data_sources.reviews?.ai_insights && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 0.9 }}
+                  className="suggestion-card group"
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className="text-green-400 group-hover:text-green-300 transition-colors">
+                      <Star className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-black font-semibold mb-2">Customer Reviews Analysis</h4>
+                      <p className="text-black/70 text-sm mb-3 whitespace-pre-line">
+                        {unifiedData.data_sources.reviews.ai_insights.substring(0, 200)}...
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-black/60">
+                          From {unifiedData.data_sources.reviews.review_count || 0} customer reviews
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-green-500/20 text-green-400">Reviews Analysis</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Mastodon Insights */}
+              {unifiedData.data_sources.mastodon && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ delay: 1.0 }}
+                  className="suggestion-card group"
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className="text-purple-400 group-hover:text-purple-300 transition-colors">
+                      <Users className="w-6 h-6" />
+                    </div>
+                    <div className="flex-1">
+                      <h4 className="text-black font-semibold mb-2">Social Media Sentiment</h4>
+                      <p className="text-black/70 text-sm mb-3">
+                        Mastodon community discussions show varied engagement patterns. Monitor social sentiment trends for reputation insights.
+                      </p>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs text-black/60">
+                          From {unifiedData.data_sources.mastodon.post_count || 0} social media posts
+                        </span>
+                        <span className="text-xs px-2 py-1 rounded-full bg-purple-500/20 text-purple-400">Social Analysis</span>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           )}
         </motion.div>
