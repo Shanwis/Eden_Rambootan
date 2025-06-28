@@ -1,0 +1,40 @@
+{
+  "name": "ai-company-reputation-analyzer",
+  "version": "1.0.0",
+  "description": "AI-powered company reputation analysis Chrome extension",
+  "main": "index.js",
+  "scripts": {
+    "build": "webpack --mode production",
+    "dev": "webpack --mode development --watch",
+    "start": "webpack serve --mode development",
+    "start-servers": "python -m pip install -r requirements.txt && python reddit_scraper.py & python news_scraper.py & python mastodon_scraper.py & python reviews_scraper.py & python unified_analyzer.py"
+  },
+  "dependencies": {
+    "@headlessui/react": "^2.2.4",
+    "framer-motion": "^10.16.4",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^3.0.1",
+    "lucide-react": "^0.292.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "recharts": "^2.8.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.23.3",
+    "@babel/preset-env": "^7.23.3",
+    "@babel/preset-react": "^7.23.3",
+    "@types/react": "^18.2.37",
+    "@types/react-dom": "^18.2.15",
+    "autoprefixer": "^10.4.16",
+    "babel-loader": "^9.1.3",
+    "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^6.8.1",
+    "html-webpack-plugin": "^5.5.3",
+    "postcss-loader": "^7.3.3",
+    "style-loader": "^3.3.3",
+    "tailwindcss": "^3.3.5",
+    "webpack": "^5.89.0",
+    "webpack-cli": "^5.1.4",
+    "webpack-dev-server": "^4.15.1"
+  }
+}
